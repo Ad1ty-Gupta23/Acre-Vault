@@ -1,0 +1,159 @@
+{
+  "contracts": [
+    {
+      "contractId": "001",
+      "contractTitle": "Sale Deed for Immovable Property",
+      "date": "15th day of October, 2023",
+      "parties": {
+        "seller": {
+          "name": "John Doe",
+          "address": "123 Main Street, Mumbai, Maharashtra, 400001",
+          "aadhaar": "1234 5678 9012",
+          "pan": "ABCDE1234F"
+        },
+        "buyer": {
+          "name": "Jane Smith",
+          "address": "456 Elm Street, Bangalore, Karnataka, 560001",
+          "aadhaar": "9876 5432 1098",
+          "pan": "ZYXWV9876G"
+        }
+      },
+      "propertyDetails": {
+        "surveyNumber": "45",
+        "plotNumber": "12",
+        "totalArea": { "value": "500", "unit": "sqm" },
+        "location": "Mumbai, Maharashtra",
+        "coordinates": { "latitude": "19.0760", "longitude": "72.8777" }
+      },
+      "saleConsideration": {
+        "amount": "₹50,00,000",
+        "amountInWords": "Rupees Fifty Lakh Only"
+      },
+      "ownershipTransfer": "The Seller transfers full ownership rights to the Buyer."
+    },
+    {
+      "contractId": "002",
+      "contractTitle": "Sale Deed for Immovable Property",
+      "date": "20th day of November, 2023",
+      "parties": {
+        "seller": {
+          "name": "Ramesh Kumar",
+          "address": "456 Gandhi Road, Delhi, Delhi, 110001",
+          "aadhaar": "2345 6789 0123",
+          "pan": "BCDEF2345G"
+        },
+        "buyer": {
+          "name": "Suresh Patel",
+          "address": "789 Nehru Street, Hyderabad, Telangana, 500001",
+          "aadhaar": "8765 4321 0987",
+          "pan": "YXWVU8765H"
+        }
+      },
+      "propertyDetails": {
+        "surveyNumber": "78",
+        "plotNumber": "34",
+        "totalArea": { "value": "750", "unit": "sqm" },
+        "location": "Delhi, Delhi",
+        "coordinates": { "latitude": "28.6139", "longitude": "77.2090" }
+      },
+      "saleConsideration": {
+        "amount": "₹75,00,000",
+        "amountInWords": "Rupees Seventy-Five Lakh Only"
+      },
+      "ownershipTransfer": "The Seller transfers full ownership rights to the Buyer."
+    },
+    {
+      "contractId": "003",
+      "contractTitle": "Sale Deed for Immovable Property",
+      "date": "5th day of December, 2023",
+      "parties": {
+        "seller": {
+          "name": "Anita Desai",
+          "address": "101 Park Avenue, Kolkata, West Bengal, 700001",
+          "aadhaar": "3456 7890 1234",
+          "pan": "CDEFG3456H"
+        },
+        "buyer": {
+          "name": "Rajesh Mehta",
+          "address": "202 Lake Road, Chennai, Tamil Nadu, 600001",
+          "aadhaar": "7654 3210 9876",
+          "pan": "WVUTS7654I"
+        }
+      },
+      "propertyDetails": {
+        "surveyNumber": "56",
+        "plotNumber": "89",
+        "totalArea": { "value": "1000", "unit": "sqm" },
+        "location": "Kolkata, West Bengal",
+        "coordinates": { "latitude": "22.5726", "longitude": "88.3639" }
+      },
+      "saleConsideration": {
+        "amount": "₹1,00,00,000",
+        "amountInWords": "Rupees One Crore Only"
+      },
+      "ownershipTransfer": "The Seller transfers full ownership rights to the Buyer."
+    },
+    {
+      "contractId": "004",
+      "contractTitle": "Sale Deed for Immovable Property",
+      "date": "10th day of January, 2024",
+      "parties": {
+        "seller": {
+          "name": "Manoj Verma",
+          "address": "505 Green Valley, Pune, Maharashtra, 411001",
+          "aadhaar": "4567 8901 2345",
+          "pan": "FGHIJ4567K"
+        },
+        "buyer": {
+          "name": "Sneha Roy",
+          "address": "303 Blue Street, Jaipur, Rajasthan, 302001",
+          "aadhaar": "6543 2109 8765",
+          "pan": "UTSRQ6543L"
+        }
+      },
+      "propertyDetails": {
+        "surveyNumber": "99",
+        "plotNumber": "22",
+        "totalArea": { "value": "600", "unit": "sqm" },
+        "location": "Pune, Maharashtra",
+        "coordinates": { "latitude": "18.5204", "longitude": "73.8567" }
+      },
+      "saleConsideration": {
+        "amount": "₹80,00,000",
+        "amountInWords": "Rupees Eighty Lakh Only"
+      },
+      "ownershipTransfer": "The Seller transfers full ownership rights to the Buyer."
+    },
+    {
+      "contractId": "005",
+      "contractTitle": "SALE DEED FOR IMMOVABLE PROPERTY",
+      "date": "15/October/2023",
+      "parties": {
+        "seller": {
+          "name": "John Doe",
+          "address": "123 Main Street, Mumbai, Maharashtra, 400001",
+          "aadhaar": "123456789012",
+          "pan": "ABCDE1234F"
+        },
+        "buyer": {
+          "name": "Jane Smith",
+          "address": "456 Elm Street, Bangalore, Karnataka, 560001",
+          "aadhaar": "987654321098",
+          "pan": "ZYXWV9876G"
+        }
+      },
+      "propertyDetails": {
+        "surveyNumber": "45",
+        "plotNumber": "12",
+        "totalArea": { "value": "580", "unit": "sqm" },
+        "location": "Mumbai, Maharashtra",
+        "coordinates": { "latitude": "19.0760", "longitude": "72.8777" }
+      },
+      "saleConsideration": {
+        "amount": "₹25,00,000",
+        "amountInWords": "Rupees Twenty-Five Lakh Only"
+      },
+      "ownershipTransfer": "The Seller transfers full ownership rights to the Buyer."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+    "deathCertificates": [
+      {
+        "certificateId": "DC001",
+        "parent": "John Doe",
+        "heir": "Jane Doe"
+      },
+      {
+        "certificateId": "DC002",
+        "parent": "Alice Smith",
+        "heir": "Bob Smith"
+      },
+      {
+        "certificateId": "DC003",
+        "parent": "Michael Brown",
+        "heir": "Sarah Brown"
+      },
+      {
+        "certificateId": "DC004",
+        "parent": "Emma Johnson",
+        "heir": "Liam Johnson"
+      },
+      {
+        "certificateId": "DC005",
+        "parent": "Olivia Davis",
+        "heir": "Noah Davis"
+      },
+      {
+        "certificateId": "DC006",
+        "parent": "William Wilson",
+        "heir": "Sophia Wilson"
+      },
+      {
+        "certificateId": "DC007",
+        "parent": "John",
+        "heir": "rush"
+      },
+      {
+        "certificateId": "DC008",
+        "parent": "Komal Singh",
+        "heir": "Aaryan"
+      },
+      {
+        "certificateId": "DC009",
+        "parent": "Komal",
+        "heir": "Aditya"
+      }
+    ]
+  }
+  
