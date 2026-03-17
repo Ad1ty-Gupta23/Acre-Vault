@@ -9,6 +9,14 @@ export const register = async (req, res) => {
     const { name, email, password, role, aadhaarNumber, panNumber } = req.body;
     console.log('Received:', req.body); // Log incoming data
 
+    // Validate required fields
+    if (!name || !email || !password || !role || !aadhaarNumber || !panNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields (name, email, password, role, aadhaarNumber, panNumber) are required'
+      });
+    }
+
     // Check for existing user
     const userExists = await User.findOne({ email });
     if (userExists) {
