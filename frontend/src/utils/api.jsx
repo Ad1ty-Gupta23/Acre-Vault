@@ -31,6 +31,13 @@ api.interceptors.request.use(
 );
 // Auth API calls
 export const registerUser = async (userData) => {
+  // Ensure payload contains all required fields before sending
+  const required = ['name', 'email', 'password', 'role', 'aadhaarNumber', 'panNumber'];
+  const missing = required.filter((field) => !userData?.[field]);
+  if (missing.length) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`);
+  }
+
   try {
     const response = await api.post('/auth/register', userData);
     return response.data;
