@@ -73,17 +73,19 @@ const Home = () => {
       {/* Chatbot Button */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-110 animate-bounce"
+        aria-label={isChatOpen ? "Close assistant" : "Open assistant"}
+        className="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-110"
       >
         <MessageCircle className="w-6 h-6" />
       </button>
 
       {/* Chatbot Popup */}
       {isChatOpen && (
-        <div className="fixed bottom-20 right-6 bg-white w-96 h-[500px] shadow-lg rounded-lg border p-4 z-50 animate-fade-in">
+        <div className="fixed bottom-20 right-4 sm:right-6 bg-white w-[calc(100vw-2rem)] sm:w-96 h-[500px] max-h-[75vh] shadow-lg rounded-lg border p-4 z-50 animate-fade-in">
           <ChatbotInterface />
           <button
             className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+            aria-label="Close assistant"
             onClick={() => setIsChatOpen(false)}
           >
             ✖
