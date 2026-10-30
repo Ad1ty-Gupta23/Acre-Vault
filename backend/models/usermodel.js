@@ -40,9 +40,10 @@ const UserSchema = new Schema({
     minlength: 10,
     maxlength: 10
   },
+  // Government accounts start unverified; register() sets this explicitly
   isVerified: {
     type: Boolean,
-    default: true
+    default: false
   },
   createdAt: {
     type: Date,

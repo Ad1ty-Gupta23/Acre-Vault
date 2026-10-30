@@ -27,6 +27,14 @@ export const protect = async (req, res, next) => {
 
     req.user = await User.findById(decoded.id);
 
+    // Token for a deleted account, or a government account not yet approved
+    if (!req.user || !req.user.isVerified) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to access this route'
+      });
+    }
+
     next();
   } catch (err) {
     return res.status(401).json({

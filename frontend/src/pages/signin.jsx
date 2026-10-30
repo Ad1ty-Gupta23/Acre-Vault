@@ -40,8 +40,13 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      await register(formData);
-      navigate('/dashboard');
+      const data = await register(formData);
+      if (data.pendingApproval) {
+        setAlertInfo({ message: data.message, type: 'success' });
+        setTimeout(() => navigate('/login'), 4000);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setAlertInfo({
         message: err.message || 'Registration failed',

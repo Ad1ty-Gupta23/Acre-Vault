@@ -7,7 +7,8 @@
     "dev": "vite",
     "backend": "nodemon app.js",
     "frontend": "vite",
-    "start": "concurrently \"npm run backend\" \"npm run frontend\""
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "approve-official": "node backend/scripts/approveOfficial.js"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.7.0",

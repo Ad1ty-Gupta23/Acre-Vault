@@ -90,10 +90,13 @@ export const AuthProvider = ({ children }) => {
   const register = async (formData) => {
     try {
       const data = await registerUser(formData);
-      dispatch({
-        type: 'REGISTER_SUCCESS',
-        payload: data
-      });
+      // Government accounts get no token until an official approves them
+      if (data.token) {
+        dispatch({
+          type: 'REGISTER_SUCCESS',
+          payload: data
+        });
+      }
       return data;
     } catch (err) {
       dispatch({

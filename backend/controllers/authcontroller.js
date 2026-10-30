@@ -7,7 +7,6 @@ import { verifyAadhaar, verifyPAN } from '../utils/mockverification.js';
 export const register = async (req, res) => {
   try {
     const { name, email, password, role, aadhaarNumber, panNumber } = req.body;
-    console.log('Received:', req.body); // Log incoming data
 
     // Validate required fields
     if (!name || !email || !password || !role || !aadhaarNumber || !panNumber) {
@@ -15,6 +14,24 @@ export const register = async (req, res) => {
         success: false,
         message: 'All fields (name, email, password, role, aadhaarNumber, panNumber) are required'
       });
+    }
+
+    if (!['landowner', 'buyer', 'government'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    const aadhaarCheck = await verifyAadhaar(String(aadhaarNumber).trim());
+    if (!aadhaarCheck.isValid) {
+      return res.status(400).json({ success: false, message: aadhaarCheck.message });
+    }
+
+    const panCheck = await verifyPAN(String(panNumber).trim().toUpperCase());
+    if (!panCheck.isValid) {
+      return res.status(400).json({ success: false, message: panCheck.message });
     }
 
     // Check for existing user
@@ -27,18 +44,31 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Government accounts can verify land, so they stay locked until an
+    // existing official approves them (PUT /api/auth/verify/:id)
+    const needsApproval = role === 'government';
+
     // Create user
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
       role,
-      aadhaarNumber,
-      panNumber
+      aadhaarNumber: String(aadhaarNumber).trim(),
+      panNumber: String(panNumber).trim().toUpperCase(),
+      isVerified: !needsApproval
     });
 
-    // Send success response (e.g., with a token)
-    res.status(201).json({ success: true, message: 'User created' });
+    if (needsApproval) {
+      return res.status(201).json({
+        success: true,
+        pendingApproval: true,
+        message: 'Account created. A government official must approve it before you can log in.'
+      });
+    }
+
+    // Log the new user straight in
+    sendTokenResponse(user, 201, res);
   } catch (error) {
     console.error('Registration error:', error); // Log the error
     if (error.code === 11000) {
@@ -49,8 +79,7 @@ export const register = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error.message // Send detailed error for debugging
+      message: 'Server error'
     });
   }
 };
@@ -129,9 +158,24 @@ export const getMe = async (req, res) => {
   }
 };
 
+// @desc    List government accounts awaiting approval
+// @route   GET /api/auth/pending-officials
+// @access  Private/Government
+export const getPendingOfficials = async (req, res) => {
+  try {
+    const users = await User.find({ role: 'government', isVerified: false })
+      .select('name email createdAt')
+      .sort({ createdAt: 1 });
+
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @desc    Verify government official account
 // @route   PUT /api/auth/verify/:id
-// @access  Private/Admin (would typically be admin-only)
+// @access  Private/Government (approved officials only)
 export const verifyGovernmentOfficial = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
