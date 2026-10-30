@@ -9,7 +9,9 @@ async function main() {
 
   await landRegistry.waitForDeployment(); // Correct method in ethers v6+
 
+  const receipt = await landRegistry.deploymentTransaction().wait();
   console.log(`LandRegistry deployed at: ${await landRegistry.getAddress()}`);
+  console.log(`Deployment block: ${receipt.blockNumber} (set VITE_DEPLOY_BLOCK to this)`);
 }
 
 main()

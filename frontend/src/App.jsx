@@ -16,9 +16,11 @@ import ChatbotInterface from "./components/chatbot";
 import AddLand from "./pages/add_land";
 import InheritancePortal from "./pages/InheritancePortal";
 import { BlockchainProvider } from "./context/BlockchainContext";
+import { ToastContainer } from "react-toastify";
 import LandGISMap from './pages/land_map'; // You'll need to create this
 import Properties from "./pages/properties";
 import LandRegistered from "./pages/landRegistered";
+import LandDetails from "./pages/landDetails";
 import PropertyTransfer from "./pages/property_transfer";
 import Verify from "./pages/verification";
 
@@ -62,6 +64,7 @@ const App = () => {
       <AuthProvider>
         <Router>
           <div className="flex flex-col min-h-screen">
+            <ToastContainer position="top-right" autoClose={5000} newestOnTop />
             <Navbar />
             <div className="flex-grow">
               <Routes>
@@ -73,7 +76,8 @@ const App = () => {
                 <Route path="/inherit" element={<ProtectedRoute><InheritancePortal /></ProtectedRoute>} />
                 <Route path="/land_map" element={<LandGISMap />} />
                 <Route path="/my_properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
-                <Route path="/lands" element={<LandRegistered/>} />
+                <Route path="/lands" element={<LandRegistered />} />
+                <Route path="/lands/:id" element={<LandDetails />} />
                 <Route path="/property_transfer" element={<ProtectedRoute><PropertyTransfer /></ProtectedRoute>} />
                 <Route path="/verify" element={<ProtectedRoute roles={["government"]}><Verify /></ProtectedRoute>} />
                 

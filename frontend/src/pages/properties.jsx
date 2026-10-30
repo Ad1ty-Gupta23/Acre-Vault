@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useBlockchain } from "../context/BlockchainContext";
 import { useAuth } from "../context/Authcontext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PropertyTransfer from "./property_transfer";
 import { ArrowRight, Check, AlertTriangle, Clock } from "lucide-react";
 
@@ -80,8 +80,10 @@ const Properties = () => {
                 {filteredLands.length > 0 ? (
                   filteredLands.map((land) => (
                     <tr key={land.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {land.id}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Link to={`/lands/${land.id}`} className="text-indigo-600 hover:underline">
+                          {land.id}
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {land.surveyNo}

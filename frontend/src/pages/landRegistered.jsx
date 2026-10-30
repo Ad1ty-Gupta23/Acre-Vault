@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useBlockchain } from "../context/BlockchainContext";
-
-const shortAddress = (address) => (address ? `${address.substring(0, 6)}...${address.slice(-4)}` : "—");
+import { shortAddress } from "../utils/format";
 
 const LandRegistered = () => {
   const { account, lands, landCount, landsLoading, fetchLands } = useBlockchain();
@@ -61,12 +61,20 @@ const LandRegistered = () => {
               ) : visibleLands.length > 0 ? (
                 visibleLands.map((land) => (
                   <tr key={land.id} className="text-center">
-                    <td className="border px-4 py-2">{land.id}</td>
+                    <td className="border px-4 py-2">
+                      <Link to={`/lands/${land.id}`} className="text-indigo-600 hover:underline">
+                        {land.id}
+                      </Link>
+                    </td>
                     <td className="border px-4 py-2">{land.owner}</td>
                     <td className="border px-4 py-2 font-mono text-sm" title={land.ownerWallet || ""}>
                       {shortAddress(land.ownerWallet)}
                     </td>
-                    <td className="border px-4 py-2">{land.surveyNo}</td>
+                    <td className="border px-4 py-2">
+                      <Link to={`/lands/${land.id}`} className="text-indigo-600 hover:underline">
+                        {land.surveyNo}
+                      </Link>
+                    </td>
                     <td className="border px-4 py-2">{land.area}</td>
                     <td className="border px-4 py-2">{land.isVerified ? "✅" : "❌"}</td>
                   </tr>

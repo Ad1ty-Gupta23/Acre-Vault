@@ -1,8 +1,9 @@
 // src/context/BlockchainContext.js
 import React, { createContext, useState, useEffect, useContext, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
+import { toast } from "react-toastify";
 import LandRegistryAbi from "../lib/LandRegistryAbi.json"; // Ensure the ABI JSON exists here
-import { CONTRACT_ADDRESS, CHAIN_ID, RPC_URL } from "../config";
+import { CONTRACT_ADDRESS, CHAIN_ID, RPC_URL, DEPLOY_BLOCK } from "../config";
 
 // Create the context
 const BlockchainContext = createContext();
@@ -46,7 +47,9 @@ export const BlockchainProvider = ({ children }) => {
   // Connect wallet and initialize provider/contract
   const connectWallet = async () => {
     if (!window.ethereum) {
-      setError("MetaMask not found. Install it to sign transactions.");
+      const message = "MetaMask not found. Install it to sign transactions.";
+      setError(message);
+      toast.error(message);
       return;
     }
     try {
@@ -63,6 +66,7 @@ export const BlockchainProvider = ({ children }) => {
     } catch (err) {
       console.error("Error connecting wallet:", err);
       setError(getErrorMessage(err));
+      toast.error(`Wallet connection failed: ${getErrorMessage(err)}`);
     }
   };
 
@@ -95,10 +99,49 @@ export const BlockchainProvider = ({ children }) => {
     } catch (err) {
       console.error("Error fetching lands:", err);
       setError("Could not load land records from the blockchain.");
+      toast.error("Could not load land records from the blockchain.", { toastId: "lands-error" });
     } finally {
       setLandsLoading(false);
     }
   }, [readContract]);
+
+  // Registry history from contract events, oldest first. Each entry:
+  // { type: "registered" | "verified" | "transferred", landId, owner, wallet, txHash, blockNumber, timestamp }
+  const fetchHistory = useCallback(
+    async ({ landId, limit } = {}) => {
+      const [registered, verified, transferred] = await Promise.all([
+        readContract.queryFilter(readContract.filters.LandRegistered(), DEPLOY_BLOCK),
+        readContract.queryFilter(readContract.filters.LandVerified(), DEPLOY_BLOCK),
+        readContract.queryFilter(readContract.filters.OwnershipTransferred(), DEPLOY_BLOCK),
+      ]);
+
+      let events = [
+        ...registered.map((e) => ({ type: "registered", owner: e.args.owner, wallet: e.args.ownerWallet, e })),
+        ...verified.map((e) => ({ type: "verified", wallet: e.args.registrar, e })),
+        ...transferred.map((e) => ({ type: "transferred", owner: e.args.newOwner, wallet: e.args.newOwnerWallet, e })),
+      ]
+        .map(({ e, ...rest }) => ({
+          ...rest,
+          landId: e.args.id.toString(),
+          txHash: e.transactionHash,
+          blockNumber: e.blockNumber,
+          logIndex: e.index,
+        }))
+        .sort((a, b) => a.blockNumber - b.blockNumber || a.logIndex - b.logIndex);
+
+      if (landId) events = events.filter((event) => event.landId === String(landId));
+      if (limit) events = events.slice(-limit);
+
+      // One block lookup per distinct block for timestamps
+      const provider = readContract.runner;
+      const blockNumbers = [...new Set(events.map((event) => event.blockNumber))];
+      const blocks = await Promise.all(blockNumbers.map((n) => provider.getBlock(n)));
+      const timestamps = Object.fromEntries(blocks.map((block) => [block.number, block.timestamp * 1000]));
+
+      return events.map((event) => ({ ...event, timestamp: timestamps[event.blockNumber] }));
+    },
+    [readContract]
+  );
 
   // Wraps a write: requires a wallet, waits for the receipt, refreshes lands,
   // and rethrows a readable error so pages can show it.
@@ -176,6 +219,7 @@ export const BlockchainProvider = ({ children }) => {
         error,
         connectWallet,
         fetchLands,
+        fetchHistory,
         registerLand,
         verifyLand,
         transferOwnership,
