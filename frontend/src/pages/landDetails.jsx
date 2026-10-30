@@ -14,7 +14,7 @@ const eventIcons = {
 const LandDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { account, lands, landsLoading, fetchHistory } = useBlockchain();
+  const { account, lands, landsLoading, error, fetchHistory } = useBlockchain();
   const [history, setHistory] = useState(null); // null while loading
   const [historyError, setHistoryError] = useState(false);
 
@@ -38,6 +38,11 @@ const LandDetails = () => {
       <div className="max-w-xl mx-auto text-center py-24 px-4">
         {landsLoading ? (
           <p className="text-gray-600">Loading land record...</p>
+        ) : lands.length === 0 && error ? (
+          <>
+            <h1 className="text-2xl font-bold text-gray-900">Couldn't reach the registry</h1>
+            <p className="mt-2 text-gray-500">The blockchain network isn't responding. Please try again shortly.</p>
+          </>
         ) : (
           <>
             <h1 className="text-2xl font-bold text-gray-900">Land #{id} not found</h1>

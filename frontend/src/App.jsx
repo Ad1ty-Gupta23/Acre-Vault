@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/Authcontext";
 import Navbar from "./components/navbar";
+import Footer from "./components/footer";
 import Login from "./pages/login";
 import Signup from "./pages/signin";
 import Dashboard from "./pages/dashboard"; // You'll need to create this
@@ -92,6 +93,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
+            <Footer />
           </div>
         </Router>
       </AuthProvider>
