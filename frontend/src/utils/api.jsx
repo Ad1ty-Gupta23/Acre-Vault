@@ -55,4 +55,28 @@ export const getCurrentUser = async () => {
   }
 };
 
+// Unwraps the server's { success, message } error shape
+const request = async (call) => {
+  try {
+    const response = await call();
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error('Server error');
+  }
+};
+
+// Government approvals
+export const getPendingOfficials = () => request(() => api.get('/auth/pending-officials'));
+export const approveOfficial = (id) => request(() => api.put(`/auth/verify/${id}`));
+
+// Inheritance claims
+export const submitInheritanceClaim = (claim) => request(() => api.post('/inheritance/claims', claim));
+export const getMyInheritanceClaims = () => request(() => api.get('/inheritance/claims/mine'));
+export const getInheritanceClaims = (status) =>
+  request(() => api.get('/inheritance/claims', { params: { status } }));
+export const approveInheritanceClaim = (id, txHash) =>
+  request(() => api.put(`/inheritance/claims/${id}/approve`, { txHash }));
+export const rejectInheritanceClaim = (id, note) =>
+  request(() => api.put(`/inheritance/claims/${id}/reject`, { note }));
+
 export default api;

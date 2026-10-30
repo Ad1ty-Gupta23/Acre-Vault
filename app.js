@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cron from "node-cron";
 import authRoutes from './backend/routes/authroutes.js';
+import inheritanceRoutes from './backend/routes/inheritanceroutes.js';
 
 
 const app = express();
@@ -47,5 +48,6 @@ app.get("/ping", (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/inheritance', inheritanceRoutes);
 
 export default app;

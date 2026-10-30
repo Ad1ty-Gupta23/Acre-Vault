@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useBlockchain } from "../context/BlockchainContext";
+import GovernmentRequests from "../components/governmentRequests";
 
 const Verify = () => {
   const { account, isRegistrar, lands, landsLoading, loading, connectWallet, verifyLand, fetchLands } =
@@ -108,6 +109,9 @@ const Verify = () => {
           </table>
         </div>
       </div>
+
+      <hr />
+      <GovernmentRequests />
     </div>
   );
 };
