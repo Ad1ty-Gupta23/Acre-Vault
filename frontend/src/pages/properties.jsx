@@ -3,11 +3,10 @@ import { useBlockchain } from "../context/BlockchainContext";
 import { useAuth } from "../context/Authcontext";
 import { useNavigate } from "react-router-dom";
 import PropertyTransfer from "./property_transfer";
-import { ArrowRight, Check, X, AlertTriangle, Clock } from "lucide-react"; // Import Clock or another icon
+import { ArrowRight, Check, AlertTriangle, Clock } from "lucide-react";
 
 const Properties = () => {
-  const { account, lands, landCount, loading, connectWallet, fetchLands } =
-    useBlockchain();
+  const { account, lands, landsLoading, fetchLands } = useBlockchain();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -15,8 +14,12 @@ const Properties = () => {
     fetchLands();
   }, [fetchLands]);
 
-  // Filter lands owned by the current user
-  const filteredLands = lands.filter((land) => land.owner === user?.name);
+  // Lands owned by the connected wallet, or recorded under the user's name
+  const filteredLands = lands.filter(
+    (land) =>
+      (account && land.ownerWallet?.toLowerCase() === account.toLowerCase()) ||
+      land.owner === user?.name
+  );
 
   const handleTransferClick = (landId) => {
     navigate("/property_transfer", { state: { selectedLandId: landId } });
@@ -46,7 +49,7 @@ const Properties = () => {
           </button>
         </div>
 
-        {loading ? (
+        {landsLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             <p className="ml-3 text-gray-600">Loading properties...</p>
@@ -68,9 +71,9 @@ const Properties = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
-                  </th> */}
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -97,29 +100,21 @@ const Properties = () => {
                           </span>
                         )}
                       </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleTransferClick(land.id)}
-                            className="text-blue-600 hover:text-blue-900 flex items-center"
-                            disabled={!land.isVerified}
-                          >
-                            <ArrowRight className="h-4 w-4 mr-1" />
-                            Transfer
-                          </button>
-                          <button
-                            onClick={() => navigate(`/property_details/${land.id}`)}
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            View
-                          </button>
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleTransferClick(land.id)}
+                          className="text-blue-600 hover:text-blue-900 flex items-center disabled:text-gray-400 disabled:cursor-not-allowed"
+                          disabled={!land.isVerified}
+                        >
+                          <ArrowRight className="h-4 w-4 mr-1" />
+                          Transfer
+                        </button>
                         {!land.isVerified && (
                           <p className="text-xs text-yellow-600 mt-1">
                             Verification required before transfer
                           </p>
                         )}
-                      </td> */}
+                      </td>
                     </tr>
                   ))
                 ) : (

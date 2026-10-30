@@ -1,140 +1,179 @@
 // src/context/BlockchainContext.js
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useEffect, useContext, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
 import LandRegistryAbi from "../lib/LandRegistryAbi.json"; // Ensure the ABI JSON exists here
-
-// Replace with your deployed contract address on Holesky
-const CONTRACT_ADDRESS = "0x66C5655A7A3a86BB514ECa467502FF5517692191";
+import { CONTRACT_ADDRESS, CHAIN_ID, RPC_URL } from "../config";
 
 // Create the context
 const BlockchainContext = createContext();
 
+// Turn ethers/MetaMask errors into something readable (e.g. the contract's revert reason)
+export const getErrorMessage = (error) =>
+  error?.reason ||
+  error?.info?.error?.message ||
+  error?.shortMessage ||
+  error?.message ||
+  "Transaction failed";
+
 // Provider component that will wrap your app
 export const BlockchainProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
-  const [provider, setProvider] = useState(null);
   const [contract, setContract] = useState(null);
+  const [isRegistrar, setIsRegistrar] = useState(false);
   const [lands, setLands] = useState([]);
   const [landCount, setLandCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [landsLoading, setLandsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Public RPC so anyone can browse the registry without connecting a wallet
+  const readContract = useMemo(
+    () => new ethers.Contract(CONTRACT_ADDRESS, LandRegistryAbi, new ethers.JsonRpcProvider(RPC_URL, CHAIN_ID)),
+    []
+  );
+
+  const ensureCorrectNetwork = async () => {
+    const chainIdHex = `0x${CHAIN_ID.toString(16)}`;
+    const current = await window.ethereum.request({ method: "eth_chainId" });
+    if (current !== chainIdHex) {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: chainIdHex }],
+      });
+    }
+  };
 
   // Connect wallet and initialize provider/contract
   const connectWallet = async () => {
     if (!window.ethereum) {
-      console.error("MetaMask not found");
+      setError("MetaMask not found. Install it to sign transactions.");
       return;
     }
     try {
-      // Create a read-only provider using ethers v6
-      const _provider = new ethers.BrowserProvider(window.ethereum);
       await window.ethereum.request({ method: "eth_requestAccounts" });
-      setProvider(_provider);
-
-      // Get the connected account
-      const accounts = await _provider.send("eth_accounts", []);
-      setAccount(accounts[0]);
+      await ensureCorrectNetwork();
+      const _provider = new ethers.BrowserProvider(window.ethereum);
 
       // Create a signer-based contract instance for transactions
       const signer = await _provider.getSigner();
-      const _contract = new ethers.Contract(CONTRACT_ADDRESS, LandRegistryAbi, signer);
-      setContract(_contract);
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
+      const address = await signer.getAddress();
+      setAccount(address);
+      setContract(new ethers.Contract(CONTRACT_ADDRESS, LandRegistryAbi, signer));
+      setError(null);
+    } catch (err) {
+      console.error("Error connecting wallet:", err);
+      setError(getErrorMessage(err));
     }
   };
 
   // Function to fetch all land records using a read-only instance
-  const fetchLands = async () => {
-    if (!provider) return;
+  const fetchLands = useCallback(async () => {
+    setLandsLoading(true);
     try {
-      const readContract = new ethers.Contract(CONTRACT_ADDRESS, LandRegistryAbi, provider);
-      const count = await readContract.landCount();
-      const countNumber = Number(count);
+      const countNumber = Number(await readContract.landCount());
       setLandCount(countNumber);
 
-      const landsArray = [];
-      for (let i = 1; i <= countNumber; i++) {
-        const land = await readContract.lands(i);
-        landsArray.push({
-          id: land.id.toString(),
-          owner: land.owner,
-          surveyNo: land.surveyNo,
-          area: land.area.toString(),
-          isVerified: land.isVerified,
-        });
-      }
+      const ids = Array.from({ length: countNumber }, (_, i) => i + 1);
+      const landsArray = await Promise.all(
+        ids.map(async (i) => {
+          const [land, ownerWallet] = await Promise.all([
+            readContract.lands(i),
+            // Contracts deployed before owner wallets were tracked don't have this getter
+            readContract.landOwnerWallet(i).catch(() => null),
+          ]);
+          return {
+            id: land.id.toString(),
+            owner: land.owner,
+            surveyNo: land.surveyNo,
+            area: land.area.toString(),
+            isVerified: land.isVerified,
+            ownerWallet,
+          };
+        })
+      );
       setLands(landsArray);
-    } catch (error) {
-      console.error("Error fetching lands:", error);
+    } catch (err) {
+      console.error("Error fetching lands:", err);
+      setError("Could not load land records from the blockchain.");
+    } finally {
+      setLandsLoading(false);
+    }
+  }, [readContract]);
+
+  // Wraps a write: requires a wallet, waits for the receipt, refreshes lands,
+  // and rethrows a readable error so pages can show it.
+  const sendTransaction = async (send) => {
+    if (!contract) throw new Error("Connect your wallet first.");
+    setLoading(true);
+    try {
+      const tx = await send(contract);
+      const receipt = await tx.wait();
+      await fetchLands();
+      return receipt;
+    } catch (err) {
+      console.error("Transaction error:", err);
+      throw new Error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
     }
   };
 
   // Function to register a new land record
-  const registerLand = async (ownerName, surveyNo, areaValue) => {
-    if (!contract) return;
-    try {
-      setLoading(true);
-      const tx = await contract.registerLand(ownerName, surveyNo, areaValue);
-      await tx.wait();
-      setLoading(false);
-      // Update land records after registration
-      await fetchLands();
-    } catch (error) {
-      console.error("Error registering land:", error);
-      setLoading(false);
-    }
-  };
+  const registerLand = (ownerName, surveyNo, areaValue) =>
+    sendTransaction((c) => c.registerLand(ownerName, surveyNo, areaValue));
 
-  // Function to verify a land record
-  const verifyLand = async (landId) => {
-    if (!contract) return;
-    try {
-      setLoading(true);
-      const tx = await contract.verifyLand(landId);
-      await tx.wait();
-      setLoading(false);
-      // Update lands after verification
-      await fetchLands();
-    } catch (error) {
-      console.error("Error verifying land:", error);
-      setLoading(false);
-    }
-  };
+  // Function to verify a land record (registrars only)
+  const verifyLand = (landId) => sendTransaction((c) => c.verifyLand(landId));
 
+  // Function to transfer ownership (current owner wallet, or a registrar)
+  const transferOwnership = (landId, newOwner, newOwnerWallet) =>
+    sendTransaction((c) => c.transferOwnership(landId, newOwner, newOwnerWallet));
 
-// Function to transfer ownership   
-const transferOwnership = async (landId, newOwner) => {     
-  if (!contract) return;     
-  try {       
-    setLoading(true);       
-    const tx = await contract.transferOwnership(landId, newOwner);       
-    await tx.wait();       
-    setLoading(false);       
-    // Update lands after transferring ownership       
-    await fetchLands();     
-  } catch (error) {       
-    console.error("Error transferring ownership:", error);       
-    setLoading(false);
-    throw error; // This will allow your component to catch and handle the error
-  }   
-};
-
-  // Fetch lands automatically when provider is set
+  // Load the registry on start
   useEffect(() => {
-    if (provider) {
-      fetchLands();
+    fetchLands();
+  }, [fetchLands]);
+
+  // Check whether the connected wallet is a registrar
+  useEffect(() => {
+    if (!account) {
+      setIsRegistrar(false);
+      return;
     }
-  }, [provider]);
+    readContract.isRegistrar(account).then(setIsRegistrar).catch(() => setIsRegistrar(false));
+  }, [account, readContract]);
+
+  // Keep state in sync when the user switches account or network in MetaMask
+  useEffect(() => {
+    if (!window.ethereum?.on) return;
+    const handleAccountsChanged = (accounts) => {
+      if (accounts.length === 0) {
+        setAccount(null);
+        setContract(null);
+      } else {
+        connectWallet();
+      }
+    };
+    const handleChainChanged = () => window.location.reload();
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
+    window.ethereum.on("chainChanged", handleChainChanged);
+    return () => {
+      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+      window.ethereum.removeListener("chainChanged", handleChainChanged);
+    };
+  }, []);
 
   return (
     <BlockchainContext.Provider
       value={{
         account,
-        provider,
         contract,
+        isRegistrar,
         lands,
         landCount,
         loading,
+        landsLoading,
+        error,
         connectWallet,
         fetchLands,
         registerLand,

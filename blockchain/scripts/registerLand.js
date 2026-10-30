@@ -1,8 +1,8 @@
 const hre = require("hardhat");
 
 async function main() {
-  // Replace with your deployed contract address
-  const contractAddress = "0x66C5655A7A3a86BB514ECa467502FF5517692191";
+  const contractAddress = process.env.CONTRACT_ADDRESS;
+  if (!contractAddress) throw new Error("Set CONTRACT_ADDRESS to the deployed LandRegistry address");
   const landRegistry = await hre.ethers.getContractAt("LandRegistry", contractAddress);
 
   // 1. Register a new land record

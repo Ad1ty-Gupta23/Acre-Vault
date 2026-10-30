@@ -153,10 +153,16 @@ const AddNewLand = () => {
   // Submit form to blockchain and backend
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError('');
     setSuccess('');
-  
+
+    // The record is signed by the owner's wallet, so make sure one is connected before saving anything
+    if (!account) {
+      setError('Connect your wallet before registering land.');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       // Step 1: Upload document to the fraud detection API
       const fraudDetectionFormData = new FormData();
