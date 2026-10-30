@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/Authcontext';
 import { useBlockchain } from '../context/BlockchainContext';
+import { FRAUD_API_URL } from '../config';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -164,7 +165,7 @@ const AddNewLand = () => {
       // Log the form data being sent
       console.log('Sending document for fraud detection:', formData.documentFile);
   
-      const fraudDetectionResponse = await fetch('http://localhost:5000/upload', {
+      const fraudDetectionResponse = await fetch(`${FRAUD_API_URL}/upload`, {
         method: 'POST',
         body: fraudDetectionFormData,
         // Don't set Content-Type header with FormData - browser will set it automatically with boundary
@@ -203,7 +204,7 @@ const AddNewLand = () => {
       };
   
       // Upload to backend
-      const response = await fetch('http://localhost:5000/verify-and-save', {
+      const response = await fetch(`${FRAUD_API_URL}/verify-and-save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

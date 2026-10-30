@@ -3,7 +3,7 @@ import { Send, Volume2, ArrowLeft, User, Bot, RotateCcw, Mic, MicOff } from 'luc
 import axios from 'axios';
 
 // API configuration
-const API_URL = 'http://localhost:8000';
+import { CHAT_API_URL as API_URL } from '../config';
 
 const ChatbotInterface = () => {
   const [message, setMessage] = useState('');

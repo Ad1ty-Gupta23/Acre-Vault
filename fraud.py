@@ -7,9 +7,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173", "allow_headers": ["Content-Type"]}})
+CLIENT_ORIGINS = os.environ.get("CLIENT_URL", "http://localhost:5173").split(",")
+CORS(app, resources={r"/*": {"origins": CLIENT_ORIGINS, "allow_headers": ["Content-Type"]}})
 
 # Ensure the uploads directory exists
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -20,7 +24,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 CENTRAL_DATA = []  # Initialize at the top
 
 try:
-    mongo_client = MongoClient('mongodb+srv://komalvsingh:komal717@cluster0.zodvc.mongodb.net')
+    mongodb_url = os.environ.get("MONGODB_URL")
+    if not mongodb_url:
+        raise RuntimeError("MONGODB_URL is not set")
+    mongo_client = MongoClient(mongodb_url)
     db = mongo_client['landrecords']
     property_collection = db['verified_properties']
     print("Connected to MongoDB successfully")
@@ -36,8 +43,10 @@ except Exception as e:
         with open("centraldata.json", "w") as file:
             json.dump(CENTRAL_DATA, file)
 
-# Set Tesseract path (adjust for your OS)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Tesseract is found on PATH by default; set TESSERACT_CMD to override
+# (e.g. C:\Program Files\Tesseract-OCR\tesseract.exe on Windows)
+if os.environ.get("TESSERACT_CMD"):
+    pytesseract.pytesseract.tesseract_cmd = os.environ["TESSERACT_CMD"]
 
 # Improved OCR function with image preprocessing
 def extract_text_from_image(image_path):

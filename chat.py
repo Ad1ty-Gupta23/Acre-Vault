@@ -20,7 +20,7 @@ app = FastAPI()
 # Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Update this with your frontend URL
+    allow_origins=os.environ.get("CLIENT_URL", "http://localhost:5173").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -213,6 +213,11 @@ async def chat(query: QueryModel):
             "audio_file_path": error_audio,
             "detected_language": "en"
         }
+
+@app.post("/reset")
+async def reset_chat():
+    """Chat is stateless on the server; this lets the client reset its conversation."""
+    return {"status": "ok"}
 
 @app.get("/audio/{filename}")
 async def get_audio(filename: str):

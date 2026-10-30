@@ -14,3 +14,10 @@ speechrecognition
 deep-translator
 gtts
 httpx>=0.27.0,<0.29
+# fraud.py (document verification service)
+flask
+flask-cors
+pytesseract
+pillow
+pymongo
+python-dotenv

@@ -9,26 +9,16 @@ import authRoutes from './backend/routes/authroutes.js';
 const app = express();
 dotenv.config();
 
+const PORT = process.env.PORT || 5001;
+const databaseUrl = process.env.MONGODB_URL;
+const CLIENT_URLS = (process.env.CLIENT_URL || "http://localhost:5173").split(",");
+
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5000"],
+  origin: CLIENT_URLS,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-const PORT = process.env.PORT || 5001;
-const databaseUrl = process.env.MONGODB_URL;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173/" || "http://localhost:5000/";
-
-
-
-app.use(cors()); // First CORS configuration
-app.use(
-  cors({
-    origin: CLIENT_URL,
-    credentials: true,
-  })
-);
 
 app.use(json());
 app.use(urlencoded({ extended: true }));
