@@ -118,7 +118,7 @@ const Home = () => {
           </button>
         </form>
         <p className="mt-3 text-sm text-gray-500">
-          {landCount > 0 ? `${landCount} lands on the registry, ${verifiedCount} verified. ` : ''}
+          {landCount > 0 ? `${landCount} ${landCount === 1 ? 'land' : 'lands'} on the registry, ${verifiedCount} verified. ` : ''}
           <Link to="/lands" className="text-indigo-600 hover:text-indigo-500">
             Browse all lands →
           </Link>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { CONTRACT_ADDRESS, EXPLORER_URL } from "../config";
-import { shortAddress } from "../utils/format";
+import { CONTRACT_ADDRESS } from "../config";
+import { explorerUrl, shortAddress } from "../utils/format";
 
 const Footer = () => (
   <footer className="bg-gray-800 text-gray-400 text-sm">
@@ -13,15 +13,19 @@ const Footer = () => (
       <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
         <Link to="/lands" className="hover:text-white">All Lands</Link>
         <Link to="/register" className="hover:text-white">Sign Up</Link>
-        <a
-          href={`${EXPLORER_URL}/address/${CONTRACT_ADDRESS}`}
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-white"
-          title={CONTRACT_ADDRESS}
-        >
-          Contract {shortAddress(CONTRACT_ADDRESS)}
-        </a>
+        {explorerUrl("address", CONTRACT_ADDRESS) ? (
+          <a
+            href={explorerUrl("address", CONTRACT_ADDRESS)}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white"
+            title={CONTRACT_ADDRESS}
+          >
+            Contract {shortAddress(CONTRACT_ADDRESS)}
+          </a>
+        ) : (
+          <span title={CONTRACT_ADDRESS}>Contract {shortAddress(CONTRACT_ADDRESS)}</span>
+        )}
       </nav>
     </div>
   </footer>

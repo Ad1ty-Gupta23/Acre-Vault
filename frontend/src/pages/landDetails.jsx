@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Check, Clock, ExternalLink, FileText, ShieldCheck, Repeat } from "lucide-react";
 import { useBlockchain } from "../context/BlockchainContext";
-import { EXPLORER_URL } from "../config";
-import { historyLabel, ipfsUrl, shortAddress } from "../utils/format";
+import { explorerUrl, historyLabel, ipfsUrl, shortAddress } from "../utils/format";
 
 const eventIcons = {
   registered: <FileText className="h-4 w-4 text-blue-600" />,
@@ -87,9 +86,9 @@ const LandDetails = () => {
           <div>
             <dt className="text-sm text-gray-500">Owner wallet</dt>
             <dd className="font-mono text-sm text-gray-900 break-all">
-              {land.ownerWallet ? (
+              {land.ownerWallet && explorerUrl("address", land.ownerWallet) ? (
                 <a
-                  href={`${EXPLORER_URL}/address/${land.ownerWallet}`}
+                  href={explorerUrl("address", land.ownerWallet)}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:underline"
@@ -98,7 +97,7 @@ const LandDetails = () => {
                   {shortAddress(land.ownerWallet)}
                 </a>
               ) : (
-                "—"
+                <span title={land.ownerWallet || undefined}>{shortAddress(land.ownerWallet)}</span>
               )}
               {isOwner && <span className="ml-2 font-sans text-xs text-indigo-600">(you)</span>}
             </dd>
@@ -159,14 +158,16 @@ const LandDetails = () => {
                   {event.wallet && <> · <span className="font-mono">{shortAddress(event.wallet)}</span></>}
                 </p>
                 <div className="flex flex-wrap gap-x-4">
-                  <a
-                    href={`${EXPLORER_URL}/tx/${event.txHash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center text-sm text-blue-600 hover:underline"
-                  >
-                    View transaction <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
+                  {explorerUrl("tx", event.txHash) && (
+                    <a
+                      href={explorerUrl("tx", event.txHash)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center text-sm text-blue-600 hover:underline"
+                    >
+                      View transaction <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  )}
                   {event.documentCid && (
                     <a
                       href={ipfsUrl(event.documentCid)}

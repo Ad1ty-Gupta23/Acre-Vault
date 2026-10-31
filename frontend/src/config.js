@@ -12,7 +12,9 @@ export const CONTRACT_ADDRESS =
 // Holesky testnet by default
 export const CHAIN_ID = Number(env.VITE_CHAIN_ID || 17000);
 export const RPC_URL = env.VITE_RPC_URL || "https://ethereum-holesky-rpc.publicnode.com";
-export const EXPLORER_URL = env.VITE_EXPLORER_URL || "https://holesky.etherscan.io";
+// Set VITE_EXPLORER_URL to an empty value for chains without a block explorer (e.g. the PoA network)
+export const EXPLORER_URL =
+  env.VITE_EXPLORER_URL !== undefined ? env.VITE_EXPLORER_URL : "https://holesky.etherscan.io";
 
 // Block the contract was deployed at; event queries start here (0 scans the whole chain)
 export const DEPLOY_BLOCK = Number(env.VITE_DEPLOY_BLOCK || 0);

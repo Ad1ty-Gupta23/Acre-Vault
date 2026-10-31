@@ -1,0 +1,73 @@
+# AcreVault proof-of-authority network: 4 Besu validators using QBFT consensus.
+# Run ./setup.sh first; it generates the keys, genesis and .env used here.
+x-besu: &besu
+  image: ${BESU_IMAGE}
+  # Run as the host user so generated keys and chain data stay owned by you
+  # (the image's default entrypoint would chown them when run as root)
+  user: "${HOST_UID}:${HOST_GID}"
+  entrypoint: ["/opt/besu/bin/besu"]
+  restart: unless-stopped
+  environment:
+    BESU_GENESIS_FILE: /config/genesis.json
+    BESU_DATA_PATH: /node/data
+    BESU_NODE_PRIVATE_KEY_FILE: /node/key.priv
+    BESU_P2P_PORT: "30303"
+    BESU_RPC_HTTP_ENABLED: "true"
+    BESU_RPC_HTTP_HOST: 0.0.0.0
+    BESU_RPC_HTTP_API: ETH,NET,WEB3,QBFT,TXPOOL
+    BESU_RPC_HTTP_CORS_ORIGINS: "*"
+    BESU_HOST_ALLOWLIST: "*"
+    BESU_MIN_GAS_PRICE: "0"
+    BESU_LOGGING: INFO
+
+services:
+  node1:
+    <<: *besu
+    command: ["--p2p-host=172.16.240.11"]
+    volumes:
+      - ./networkFiles/genesis.json:/config/genesis.json:ro
+      - ./nodes/node1:/node
+    ports:
+      - "8545:8545" # JSON-RPC used by the website and Hardhat
+    networks:
+      poa:
+        ipv4_address: 172.16.240.11
+
+  node2:
+    <<: *besu
+    command: ["--p2p-host=172.16.240.12", "--bootnodes=${BOOTNODE}"]
+    volumes:
+      - ./networkFiles/genesis.json:/config/genesis.json:ro
+      - ./nodes/node2:/node
+    depends_on: [node1]
+    networks:
+      poa:
+        ipv4_address: 172.16.240.12
+
+  node3:
+    <<: *besu
+    command: ["--p2p-host=172.16.240.13", "--bootnodes=${BOOTNODE}"]
+    volumes:
+      - ./networkFiles/genesis.json:/config/genesis.json:ro
+      - ./nodes/node3:/node
+    depends_on: [node1]
+    networks:
+      poa:
+        ipv4_address: 172.16.240.13
+
+  node4:
+    <<: *besu
+    command: ["--p2p-host=172.16.240.14", "--bootnodes=${BOOTNODE}"]
+    volumes:
+      - ./networkFiles/genesis.json:/config/genesis.json:ro
+      - ./nodes/node4:/node
+    depends_on: [node1]
+    networks:
+      poa:
+        ipv4_address: 172.16.240.14
+
+networks:
+  poa:
+    ipam:
+      config:
+        - subnet: 172.16.240.0/24

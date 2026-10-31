@@ -13,7 +13,8 @@ ownership history.
 | Auth & claims API | `app.js`, `backend/` (Express + MongoDB) | 5001 | Accounts, roles, inheritance claims |
 | Document checks | `fraud.py` (Flask + Tesseract) | 5000 | OCR and fraud checks on uploaded deeds |
 | Assistant | `chat.py` (FastAPI + Chroma) | 8000 | Q&A chatbot with voice input/output |
-| Smart contract | `blockchain/` (Hardhat, Solidity) | – | `LandRegistry` on Holesky |
+| Smart contract | `blockchain/` (Hardhat, Solidity) | – | `LandRegistry` on Holesky or the PoA network |
+| PoA network | `blockchain/poa-network/` (Besu, QBFT) | 8545 | Private proof-of-authority chain run by government validators |
 
 ## Roles
 
@@ -90,6 +91,13 @@ without the change showing on-chain.
    python fraud.py    # document checks
    python chat.py     # assistant
    ```
+
+### Proof-of-authority network
+
+To run the registry on a private chain where only approved government validators
+produce blocks (Hyperledger Besu, QBFT), see
+[`blockchain/poa-network/README.md`](blockchain/poa-network/README.md):
+`npm run poa:setup`, `npm run poa:start` and `npm run deploy:poa` in `blockchain/`.
 
 ### Local blockchain
 

@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { useBlockchain } from "../context/BlockchainContext";
 import { getMyInheritanceClaims, submitInheritanceClaim, uploadDocument } from "../utils/api";
-import { EXPLORER_URL } from "../config";
-import { ipfsUrl } from "../utils/format";
+import { explorerUrl, ipfsUrl } from "../utils/format";
 
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -246,9 +245,9 @@ const InheritancePortal = () => {
                       Supporting document
                     </a>
                   )}
-                  {claim.txHash && (
+                  {claim.txHash && explorerUrl("tx", claim.txHash) && (
                     <a
-                      href={`${EXPLORER_URL}/tx/${claim.txHash}`}
+                      href={explorerUrl("tx", claim.txHash)}
                       target="_blank"
                       rel="noreferrer"
                       className="text-sm text-blue-600 underline"

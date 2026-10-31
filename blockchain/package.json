@@ -5,7 +5,11 @@
   "scripts": {
     "test": "hardhat test",
     "compile": "hardhat compile",
-    "deploy:holesky": "hardhat run scripts/deploy.js --network holesky"
+    "deploy:holesky": "hardhat run scripts/deploy.js --network holesky",
+    "poa:setup": "./poa-network/setup.sh",
+    "poa:start": "docker compose -f poa-network/docker-compose.yml up -d",
+    "poa:stop": "docker compose -f poa-network/docker-compose.yml down",
+    "deploy:poa": "hardhat run scripts/deploy.js --network poa"
   },
   "keywords": [],
   "author": "",

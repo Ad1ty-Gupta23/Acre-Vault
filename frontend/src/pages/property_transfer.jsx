@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { useBlockchain } from '../context/BlockchainContext';
-import { EXPLORER_URL } from '../config';
 import { uploadDocument } from '../utils/api';
+import { explorerUrl } from '../utils/format';
 
 const PropertyTransfer = () => {
   const navigate = useNavigate();
@@ -99,9 +99,9 @@ const PropertyTransfer = () => {
           }`}
         >
           {message}
-          {txHash && (
+          {txHash && explorerUrl('tx', txHash) && (
             <a
-              href={`${EXPLORER_URL}/tx/${txHash}`}
+              href={explorerUrl('tx', txHash)}
               target="_blank"
               rel="noreferrer"
               className="block mt-1 text-sm underline"

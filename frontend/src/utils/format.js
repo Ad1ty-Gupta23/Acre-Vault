@@ -1,4 +1,4 @@
-import { IPFS_GATEWAY } from "../config";
+import { EXPLORER_URL, IPFS_GATEWAY } from "../config";
 
 export const shortAddress = (address) =>
   address ? `${address.substring(0, 6)}...${address.slice(-4)}` : "—";
@@ -36,3 +36,6 @@ export const historyLabel = (event) => {
 };
 
 export const ipfsUrl = (cid) => `${IPFS_GATEWAY.replace(/\/?$/, "/")}${cid}`;
+
+// Block explorer link for a transaction or address, or null when no explorer is configured
+export const explorerUrl = (kind, value) => (EXPLORER_URL ? `${EXPLORER_URL.replace(/\/$/, "")}/${kind}/${value}` : null);
