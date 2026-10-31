@@ -25,6 +25,27 @@ ownership history.
 On-chain, only **registrar** wallets can verify land, and only the owner's wallet
 (or a registrar, for approved inheritance claims) can transfer it.
 
+## Documents on IPFS
+
+Every land carries an ownership document stored on IPFS (pinned through
+[Pinata](https://pinata.cloud) by the Express API, `POST /api/documents`):
+
+- **Registration** pins the deed; its CID is stored on-chain with the land.
+- **Transfer** requires the signed transfer deed, which becomes the land's current
+  document (`landDocumentCid`).
+- **Inheritance** claims include a supporting document (e.g. a legal heir
+  certificate), which becomes the current document when an official approves.
+
+Every earlier document stays linked from the land's ownership history, because
+each `LandRegistered` / `OwnershipTransferred` event records its CID. A CID is a
+fingerprint of the file's contents, so a recorded document can't be swapped
+without the change showing on-chain.
+
+> **Privacy:** files on public IPFS can be downloaded by anyone who has the CID,
+> and the CIDs are public on the blockchain. Don't upload documents containing
+> Aadhaar/PAN numbers or other personal data in the clear; redact them, or
+> encrypt files before upload and share keys only with the parties involved.
+
 ## Setup
 
 1. Install dependencies:
@@ -37,7 +58,7 @@ On-chain, only **registrar** wallets can verify land, and only the owner's walle
 
 2. Copy `.env.example` to `.env` and `blockchain/.env.example` to
    `blockchain/.env`, then fill in the values (MongoDB URL, JWT secret, deployer
-   key, ...). Never commit `.env` files.
+   key, Pinata JWT, ...). Never commit `.env` files.
 
 3. Deploy the contract (or reuse an existing deployment):
 

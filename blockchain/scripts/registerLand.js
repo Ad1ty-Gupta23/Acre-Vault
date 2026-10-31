@@ -7,7 +7,7 @@ async function main() {
 
   // 1. Register a new land record
   console.log("Registering Land...");
-  let tx = await landRegistry.registerLand("Bob", "S9234", 1500);
+  let tx = await landRegistry.registerLand("Bob", "S9234", 1500, process.env.DOCUMENT_CID || "bafkreiexampledeedcid");
   await tx.wait();
   console.log("Land registered successfully!");
 

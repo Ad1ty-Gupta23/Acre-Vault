@@ -1,13 +1,16 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
+const DEED = "bafkreideeddeeddeeddeeddeeddeeddeeddeeddeeddeeddeeddeedde";
+const TRANSFER_DEED = "bafkreitransfertransfertransfertransfertransfertransfer";
+
 describe("LandRegistry", function () {
   let registry, admin, owner, buyer, stranger;
 
   beforeEach(async function () {
     [admin, owner, buyer, stranger] = await ethers.getSigners();
     registry = await ethers.deployContract("LandRegistry");
-    await registry.connect(owner).registerLand("Alice", "S-101", 1500);
+    await registry.connect(owner).registerLand("Alice", "S-101", 1500, DEED);
   });
 
   it("records the registering wallet as the owner wallet", async function () {
@@ -15,12 +18,14 @@ describe("LandRegistry", function () {
     expect(land.owner).to.equal("Alice");
     expect(land.isVerified).to.equal(false);
     expect(await registry.landOwnerWallet(1)).to.equal(owner.address);
+    expect(await registry.landDocumentCid(1)).to.equal(DEED);
   });
 
   it("rejects empty or zero-area registrations", async function () {
-    await expect(registry.registerLand("", "S-1", 1)).to.be.revertedWith("Owner required");
-    await expect(registry.registerLand("Bob", "", 1)).to.be.revertedWith("Survey number required");
-    await expect(registry.registerLand("Bob", "S-1", 0)).to.be.revertedWith("Area must be positive");
+    await expect(registry.registerLand("", "S-1", 1, DEED)).to.be.revertedWith("Owner required");
+    await expect(registry.registerLand("Bob", "", 1, DEED)).to.be.revertedWith("Survey number required");
+    await expect(registry.registerLand("Bob", "S-1", 0, DEED)).to.be.revertedWith("Area must be positive");
+    await expect(registry.registerLand("Bob", "S-1", 1, "")).to.be.revertedWith("Document required");
   });
 
   describe("verifyLand", function () {
@@ -52,46 +57,50 @@ describe("LandRegistry", function () {
   describe("transferOwnership", function () {
     it("requires the land to be verified", async function () {
       await expect(
-        registry.connect(owner).transferOwnership(1, "Bob", buyer.address)
+        registry.connect(owner).transferOwnership(1, "Bob", buyer.address, TRANSFER_DEED)
       ).to.be.revertedWith("Land is not verified");
     });
 
     it("lets the owner wallet transfer, and hands control to the new wallet", async function () {
       await registry.verifyLand(1);
-      await expect(registry.connect(owner).transferOwnership(1, "Bob", buyer.address))
+      await expect(registry.connect(owner).transferOwnership(1, "Bob", buyer.address, TRANSFER_DEED))
         .to.emit(registry, "OwnershipTransferred")
-        .withArgs(1, "Bob", buyer.address);
+        .withArgs(1, "Bob", buyer.address, TRANSFER_DEED);
 
       expect((await registry.lands(1)).owner).to.equal("Bob");
       expect(await registry.landOwnerWallet(1)).to.equal(buyer.address);
+      expect(await registry.landDocumentCid(1)).to.equal(TRANSFER_DEED);
 
       // The previous owner can no longer move it
       await expect(
-        registry.connect(owner).transferOwnership(1, "Alice", owner.address)
+        registry.connect(owner).transferOwnership(1, "Alice", owner.address, TRANSFER_DEED)
       ).to.be.revertedWith("Only the owner or a registrar can transfer");
     });
 
     it("blocks strangers", async function () {
       await registry.verifyLand(1);
       await expect(
-        registry.connect(stranger).transferOwnership(1, "Mallory", stranger.address)
+        registry.connect(stranger).transferOwnership(1, "Mallory", stranger.address, TRANSFER_DEED)
       ).to.be.revertedWith("Only the owner or a registrar can transfer");
     });
 
     it("lets a registrar transfer (inheritance)", async function () {
       await registry.verifyLand(1);
-      await registry.transferOwnership(1, "Alice Jr", buyer.address);
+      await registry.transferOwnership(1, "Alice Jr", buyer.address, TRANSFER_DEED);
       expect(await registry.landOwnerWallet(1)).to.equal(buyer.address);
     });
 
     it("rejects an empty name or zero wallet", async function () {
       await registry.verifyLand(1);
       await expect(
-        registry.connect(owner).transferOwnership(1, "", buyer.address)
+        registry.connect(owner).transferOwnership(1, "", buyer.address, TRANSFER_DEED)
       ).to.be.revertedWith("New owner required");
       await expect(
-        registry.connect(owner).transferOwnership(1, "Bob", ethers.ZeroAddress)
+        registry.connect(owner).transferOwnership(1, "Bob", ethers.ZeroAddress, TRANSFER_DEED)
       ).to.be.revertedWith("New owner wallet required");
+      await expect(
+        registry.connect(owner).transferOwnership(1, "Bob", buyer.address, "")
+      ).to.be.revertedWith("Transfer document required");
     });
   });
 });

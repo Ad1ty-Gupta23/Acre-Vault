@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { useBlockchain } from "../context/BlockchainContext";
-import { getMyInheritanceClaims, submitInheritanceClaim } from "../utils/api";
+import { getMyInheritanceClaims, submitInheritanceClaim, uploadDocument } from "../utils/api";
 import { EXPLORER_URL } from "../config";
+import { ipfsUrl } from "../utils/format";
 
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -16,6 +17,7 @@ const InheritancePortal = () => {
   const [parentName, setParentName] = useState("");
   const [certificateId, setCertificateId] = useState("");
   const [heirWallet, setHeirWallet] = useState("");
+  const [heirDocument, setHeirDocument] = useState(null);
   const [message, setMessage] = useState(null); // { type, text }
   const [submitting, setSubmitting] = useState(false);
   const [claims, setClaims] = useState([]);
@@ -39,7 +41,7 @@ const InheritancePortal = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!landId || !parentName || !certificateId || !heirWallet) {
+    if (!landId || !parentName || !certificateId || !heirWallet || !heirDocument) {
       setMessage({ type: "error", text: "Please fill in all fields." });
       return;
     }
@@ -51,11 +53,13 @@ const InheritancePortal = () => {
     setSubmitting(true);
     setMessage(null);
     try {
+      const documentCid = await uploadDocument(heirDocument, "heir-document");
       await submitInheritanceClaim({
         landId: Number(landId),
         parentName,
         certificateId,
         heirWallet: heirWallet.trim(),
+        documentCid,
       });
       setMessage({
         type: "success",
@@ -64,6 +68,8 @@ const InheritancePortal = () => {
       setLandId("");
       setParentName("");
       setCertificateId("");
+      setHeirDocument(null);
+      e.target.reset();
       loadClaims();
     } catch (err) {
       setMessage({ type: "error", text: err.message || "Could not submit the claim." });
@@ -167,6 +173,24 @@ const InheritancePortal = () => {
             <p className="mt-1 text-xs text-gray-500">The land will be transferred to this wallet.</p>
           </div>
 
+          <div>
+            <label htmlFor="heirDocument" className="block text-sm font-medium text-gray-700">
+              Supporting Document
+            </label>
+            <input
+              type="file"
+              id="heirDocument"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => setHeirDocument(e.target.files[0] || null)}
+              required
+              className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              E.g. a legal heir or succession certificate. Stored on IPFS (public) and becomes the land's
+              document if the claim is approved.
+            </p>
+          </div>
+
           <div className="flex items-center justify-between mt-8">
             <button
               type="button"
@@ -212,6 +236,16 @@ const InheritancePortal = () => {
                     Certificate {claim.certificateId} · submitted {new Date(claim.createdAt).toLocaleDateString()}
                   </p>
                   {claim.reviewNote && <p className="text-sm text-gray-600">Note: {claim.reviewNote}</p>}
+                  {claim.documentCid && (
+                    <a
+                      href={ipfsUrl(claim.documentCid)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mr-3 text-sm text-blue-600 underline"
+                    >
+                      Supporting document
+                    </a>
+                  )}
                   {claim.txHash && (
                     <a
                       href={`${EXPLORER_URL}/tx/${claim.txHash}`}

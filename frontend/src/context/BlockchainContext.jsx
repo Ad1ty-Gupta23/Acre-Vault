@@ -80,10 +80,11 @@ export const BlockchainProvider = ({ children }) => {
       const ids = Array.from({ length: countNumber }, (_, i) => i + 1);
       const landsArray = await Promise.all(
         ids.map(async (i) => {
-          const [land, ownerWallet] = await Promise.all([
+          const [land, ownerWallet, documentCid] = await Promise.all([
             readContract.lands(i),
-            // Contracts deployed before owner wallets were tracked don't have this getter
+            // Contracts deployed before owner wallets/documents were tracked don't have these getters
             readContract.landOwnerWallet(i).catch(() => null),
+            readContract.landDocumentCid(i).catch(() => null),
           ]);
           return {
             id: land.id.toString(),
@@ -92,6 +93,7 @@ export const BlockchainProvider = ({ children }) => {
             area: land.area.toString(),
             isVerified: land.isVerified,
             ownerWallet,
+            documentCid: documentCid || null,
           };
         })
       );
@@ -106,7 +108,7 @@ export const BlockchainProvider = ({ children }) => {
   }, [readContract]);
 
   // Registry history from contract events, oldest first. Each entry:
-  // { type: "registered" | "verified" | "transferred", landId, owner, wallet, txHash, blockNumber, timestamp }
+  // { type: "registered" | "verified" | "transferred", landId, owner, wallet, documentCid, txHash, blockNumber, timestamp }
   const fetchHistory = useCallback(
     async ({ landId, limit } = {}) => {
       const [registered, verified, transferred] = await Promise.all([
@@ -116,9 +118,21 @@ export const BlockchainProvider = ({ children }) => {
       ]);
 
       let events = [
-        ...registered.map((e) => ({ type: "registered", owner: e.args.owner, wallet: e.args.ownerWallet, e })),
+        ...registered.map((e) => ({
+          type: "registered",
+          owner: e.args.owner,
+          wallet: e.args.ownerWallet,
+          documentCid: e.args.documentCid,
+          e,
+        })),
         ...verified.map((e) => ({ type: "verified", wallet: e.args.registrar, e })),
-        ...transferred.map((e) => ({ type: "transferred", owner: e.args.newOwner, wallet: e.args.newOwnerWallet, e })),
+        ...transferred.map((e) => ({
+          type: "transferred",
+          owner: e.args.newOwner,
+          wallet: e.args.newOwnerWallet,
+          documentCid: e.args.documentCid,
+          e,
+        })),
       ]
         .map(({ e, ...rest }) => ({
           ...rest,
@@ -161,16 +175,17 @@ export const BlockchainProvider = ({ children }) => {
     }
   };
 
-  // Function to register a new land record
-  const registerLand = (ownerName, surveyNo, areaValue) =>
-    sendTransaction((c) => c.registerLand(ownerName, surveyNo, areaValue));
+  // Function to register a new land record; documentCid is the deed's IPFS CID
+  const registerLand = (ownerName, surveyNo, areaValue, documentCid) =>
+    sendTransaction((c) => c.registerLand(ownerName, surveyNo, areaValue, documentCid));
 
   // Function to verify a land record (registrars only)
   const verifyLand = (landId) => sendTransaction((c) => c.verifyLand(landId));
 
-  // Function to transfer ownership (current owner wallet, or a registrar)
-  const transferOwnership = (landId, newOwner, newOwnerWallet) =>
-    sendTransaction((c) => c.transferOwnership(landId, newOwner, newOwnerWallet));
+  // Function to transfer ownership (current owner wallet, or a registrar).
+  // documentCid is the transfer deed's IPFS CID and becomes the land's current document.
+  const transferOwnership = (landId, newOwner, newOwnerWallet, documentCid) =>
+    sendTransaction((c) => c.transferOwnership(landId, newOwner, newOwnerWallet, documentCid));
 
   // Load the registry on start
   useEffect(() => {

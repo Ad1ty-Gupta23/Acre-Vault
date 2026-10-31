@@ -65,6 +65,18 @@ const request = async (call) => {
   }
 };
 
+// Pins a document to IPFS through the backend and returns its CID.
+// kind: "deed" | "transfer-deed" | "heir-document"
+export const uploadDocument = async (file, kind) => {
+  const form = new FormData();
+  form.append('document', file);
+  form.append('kind', kind);
+  const res = await request(() =>
+    api.post('/documents', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  );
+  return res.data.cid;
+};
+
 // Government approvals
 export const getPendingOfficials = () => request(() => api.get('/auth/pending-officials'));
 export const approveOfficial = (id) => request(() => api.put(`/auth/verify/${id}`));

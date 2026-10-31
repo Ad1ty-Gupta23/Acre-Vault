@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/Authcontext';
 import { useBlockchain } from '../context/BlockchainContext';
 import { FRAUD_API_URL } from '../config';
+import { uploadDocument } from '../utils/api';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -196,7 +197,10 @@ const AddNewLand = () => {
         throw new Error(`Document appears fraudulent (Risk score: ${fraudDetectionData.verification_result.risk_score}). Land registration cannot proceed.`);
       }
   
-      // Step 3: Create the data object to send to the server
+      // Step 3: Store the deed on IPFS; its CID is recorded on-chain so the document can't be swapped later
+      const documentCid = await uploadDocument(formData.documentFile, 'deed');
+
+      // Step 4: Create the data object to send to the server
       const landData = {
         contractName: formData.contractName,
         surveyNo: formData.surveyNo,
@@ -205,6 +209,7 @@ const AddNewLand = () => {
         coordinates: formData.coordinates,
         description: formData.description,
         ownerId: user._id,
+        documentCid,
         // Add extracted data from the fraud detection if available
         extractedData: fraudDetectionData.extracted_data
       };
@@ -224,8 +229,8 @@ const AddNewLand = () => {
         throw new Error(data.message || 'Failed to save land details');
       }
   
-      // Step 4: Register on blockchain
-      await registerLand(formData.contractName, formData.surveyNo, formData.area);
+      // Step 5: Register on blockchain
+      await registerLand(formData.contractName, formData.surveyNo, formData.area, documentCid);
   
       setSuccess('Land registered successfully on blockchain and database!');
       setTimeout(() => {
@@ -445,6 +450,9 @@ const AddNewLand = () => {
                   file:bg-blue-50 file:text-blue-700
                   hover:file:bg-blue-100"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Stored on IPFS and fingerprinted on the blockchain. IPFS is public: anyone with the link can open it.
+              </p>
               <p className="mt-1 text-xs text-gray-500">
                 Upload land deed, title or ownership proof (PDF, JPG or PNG)
               </p>

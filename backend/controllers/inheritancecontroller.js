@@ -1,5 +1,6 @@
 import { createRequire } from 'module';
 import InheritanceClaim from '../models/inheritanceClaimModel.js';
+import { isValidCid } from '../utils/ipfs.js';
 
 // Mock death-certificate registry. Kept on the server so the records
 // can't be read or edited from the browser.
@@ -18,13 +19,17 @@ const findCertificate = (certificateId, parentName) =>
 // @access  Private
 export const createClaim = async (req, res) => {
   try {
-    const { landId, parentName, certificateId, heirWallet } = req.body;
+    const { landId, parentName, certificateId, heirWallet, documentCid } = req.body;
 
-    if (!landId || !parentName || !certificateId || !heirWallet) {
+    if (!landId || !parentName || !certificateId || !heirWallet || !documentCid) {
       return res.status(400).json({
         success: false,
-        message: 'landId, parentName, certificateId and heirWallet are required'
+        message: 'landId, parentName, certificateId, heirWallet and documentCid are required'
       });
+    }
+
+    if (!isValidCid(documentCid)) {
+      return res.status(400).json({ success: false, message: 'Invalid document CID' });
     }
 
     const certificate = findCertificate(String(certificateId), String(parentName));
@@ -57,6 +62,7 @@ export const createClaim = async (req, res) => {
       certificateId: certificate.certificateId,
       heirName: certificate.heir,
       heirWallet,
+      documentCid,
       claimant: req.user.id
     });
 

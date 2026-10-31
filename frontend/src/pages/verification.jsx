@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useBlockchain } from "../context/BlockchainContext";
 import GovernmentRequests from "../components/governmentRequests";
+import { ipfsUrl } from "../utils/format";
 
 const Verify = () => {
   const { account, isRegistrar, lands, landsLoading, loading, connectWallet, verifyLand, fetchLands } =
@@ -72,13 +73,14 @@ const Verify = () => {
                 <th className="border px-4 py-2">Owner</th>
                 <th className="border px-4 py-2">Survey No</th>
                 <th className="border px-4 py-2">Area</th>
+                <th className="border px-4 py-2">Deed</th>
                 <th className="border px-4 py-2">Action</th>
               </tr>
             </thead>
             <tbody>
               {landsLoading && lands.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="border px-4 py-2 text-center">Loading...</td>
+                  <td colSpan="6" className="border px-4 py-2 text-center">Loading...</td>
                 </tr>
               ) : unverifiedLands.length > 0 ? (
                 unverifiedLands.map((land) => (
@@ -87,6 +89,20 @@ const Verify = () => {
                     <td className="border px-4 py-2">{land.owner}</td>
                     <td className="border px-4 py-2">{land.surveyNo}</td>
                     <td className="border px-4 py-2">{land.area}</td>
+                    <td className="border px-4 py-2">
+                      {land.documentCid ? (
+                        <a
+                          href={ipfsUrl(land.documentCid)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 underline"
+                        >
+                          Review
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className="border px-4 py-2">
                       <button
                         onClick={() => handleVerify(land.id)}
@@ -100,7 +116,7 @@ const Verify = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="border px-4 py-2 text-center">
+                  <td colSpan="6" className="border px-4 py-2 text-center">
                     No unverified lands found
                   </td>
                 </tr>

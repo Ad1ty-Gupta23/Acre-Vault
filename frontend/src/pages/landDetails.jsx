@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Check, Clock, ExternalLink, FileText, ShieldCheck, Repeat } from "lucide-react";
 import { useBlockchain } from "../context/BlockchainContext";
 import { EXPLORER_URL } from "../config";
-import { historyLabel, shortAddress } from "../utils/format";
+import { historyLabel, ipfsUrl, shortAddress } from "../utils/format";
 
 const eventIcons = {
   registered: <FileText className="h-4 w-4 text-blue-600" />,
@@ -109,6 +109,25 @@ const LandDetails = () => {
           </div>
         </dl>
 
+        <div className="mt-6 pt-4 border-t">
+          <p className="text-sm text-gray-500">Current ownership document</p>
+          {land.documentCid ? (
+            <a
+              href={ipfsUrl(land.documentCid)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center text-blue-600 hover:underline"
+            >
+              <FileText className="h-4 w-4 mr-1" /> Open document (IPFS)
+            </a>
+          ) : (
+            <p className="text-gray-900">No document on record</p>
+          )}
+          {land.documentCid && (
+            <p className="mt-1 font-mono text-xs text-gray-500 break-all">CID {land.documentCid}</p>
+          )}
+        </div>
+
         {isOwner && land.isVerified && (
           <button
             onClick={() => navigate("/property_transfer", { state: { selectedLandId: land.id } })}
@@ -139,14 +158,27 @@ const LandDetails = () => {
                   {event.timestamp ? new Date(event.timestamp).toLocaleString() : `Block ${event.blockNumber}`}
                   {event.wallet && <> · <span className="font-mono">{shortAddress(event.wallet)}</span></>}
                 </p>
-                <a
-                  href={`${EXPLORER_URL}/tx/${event.txHash}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center text-sm text-blue-600 hover:underline"
-                >
-                  View transaction <ExternalLink className="h-3 w-3 ml-1" />
-                </a>
+                <div className="flex flex-wrap gap-x-4">
+                  <a
+                    href={`${EXPLORER_URL}/tx/${event.txHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center text-sm text-blue-600 hover:underline"
+                  >
+                    View transaction <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                  {event.documentCid && (
+                    <a
+                      href={ipfsUrl(event.documentCid)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center text-sm text-blue-600 hover:underline"
+                    >
+                      {event.type === "registered" ? "Registration deed" : "Transfer deed"}
+                      <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  )}
+                </div>
               </li>
             ))}
           </ol>

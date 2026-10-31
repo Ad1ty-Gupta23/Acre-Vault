@@ -16,3 +16,6 @@ export const EXPLORER_URL = env.VITE_EXPLORER_URL || "https://holesky.etherscan.
 
 // Block the contract was deployed at; event queries start here (0 scans the whole chain)
 export const DEPLOY_BLOCK = Number(env.VITE_DEPLOY_BLOCK || 0);
+
+// Gateway used to open documents stored on IPFS
+export const IPFS_GATEWAY = env.VITE_IPFS_GATEWAY || "https://gateway.pinata.cloud/ipfs/";

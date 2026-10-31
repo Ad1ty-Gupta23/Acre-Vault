@@ -12,11 +12,13 @@ async function main() {
   const newOwner = "Charlie"; // New owner name
   const newOwnerWallet = process.env.NEW_OWNER_WALLET; // New owner's wallet address
   if (!newOwnerWallet) throw new Error("Set NEW_OWNER_WALLET to the new owner's address");
+  const documentCid = process.env.DOCUMENT_CID; // IPFS CID of the transfer deed
+  if (!documentCid) throw new Error("Set DOCUMENT_CID to the transfer deed's IPFS CID");
 
   console.log(`Transferring ownership of land record ID ${landId} to ${newOwner}...`);
 
   // Call the transferOwnership function
-  const tx = await landRegistry.transferOwnership(landId, newOwner, newOwnerWallet);
+  const tx = await landRegistry.transferOwnership(landId, newOwner, newOwnerWallet, documentCid);
   await tx.wait();
 
   console.log("Ownership transferred successfully!");

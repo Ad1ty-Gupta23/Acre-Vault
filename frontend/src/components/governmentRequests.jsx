@@ -7,6 +7,7 @@ import {
   getPendingOfficials,
   rejectInheritanceClaim,
 } from "../utils/api";
+import { ipfsUrl } from "../utils/format";
 
 // Inheritance claims and official sign-ups awaiting a government decision
 const GovernmentRequests = () => {
@@ -48,7 +49,7 @@ const GovernmentRequests = () => {
     run(
       claim._id,
       async () => {
-        const receipt = await transferOwnership(claim.landId, claim.heirName, claim.heirWallet);
+        const receipt = await transferOwnership(claim.landId, claim.heirName, claim.heirWallet, claim.documentCid);
         await approveInheritanceClaim(claim._id, receipt.hash);
       },
       `Land ${claim.landId} transferred to ${claim.heirName}.`
@@ -106,7 +107,19 @@ const GovernmentRequests = () => {
                         {land && !ownerMatches && <span className="block text-xs">Does not match deceased</span>}
                       </td>
                       <td className="border px-4 py-2">{claim.parentName}</td>
-                      <td className="border px-4 py-2">{claim.certificateId}</td>
+                      <td className="border px-4 py-2">
+                        {claim.certificateId}
+                        {claim.documentCid && (
+                          <a
+                            href={ipfsUrl(claim.documentCid)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block text-xs text-blue-600 underline"
+                          >
+                            Supporting document
+                          </a>
+                        )}
+                      </td>
                       <td className="border px-4 py-2">
                         {claim.heirName}
                         <span className="block font-mono text-xs text-gray-500" title={claim.heirWallet}>

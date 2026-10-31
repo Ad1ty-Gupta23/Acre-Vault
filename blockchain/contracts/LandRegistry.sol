@@ -16,12 +16,16 @@ contract LandRegistry {
     // Wallet allowed to transfer each land (the registering wallet, then each new owner)
     mapping(uint256 => address) public landOwnerWallet;
 
+    // IPFS CID of each land's current ownership document (the registration deed,
+    // replaced by the transfer deed on every transfer; earlier CIDs stay in the events)
+    mapping(uint256 => string) public landDocumentCid;
+
     // Government officials allowed to verify land and process transfers such as inheritance
     address public admin;
     mapping(address => bool) public isRegistrar;
 
-    event LandRegistered(uint256 id, string owner, string surveyNo, uint256 area, address ownerWallet);
-    event OwnershipTransferred(uint256 id, string newOwner, address newOwnerWallet);
+    event LandRegistered(uint256 id, string owner, string surveyNo, uint256 area, address ownerWallet, string documentCid);
+    event OwnershipTransferred(uint256 id, string newOwner, address newOwnerWallet, string documentCid);
     event LandVerified(uint256 id, address registrar);
     event RegistrarUpdated(address account, bool allowed);
 
@@ -51,15 +55,19 @@ contract LandRegistry {
         emit RegistrarUpdated(_account, _allowed);
     }
 
-    function registerLand(string memory _owner, string memory _surveyNo, uint256 _area) public {
+    function registerLand(string memory _owner, string memory _surveyNo, uint256 _area, string memory _documentCid)
+        public
+    {
         require(bytes(_owner).length > 0, "Owner required");
         require(bytes(_surveyNo).length > 0, "Survey number required");
         require(_area > 0, "Area must be positive");
+        require(bytes(_documentCid).length > 0, "Document required");
 
         landCount++;
         lands[landCount] = LandRecord(landCount, _owner, _surveyNo, _area, false);
         landOwnerWallet[landCount] = msg.sender;
-        emit LandRegistered(landCount, _owner, _surveyNo, _area, msg.sender);
+        landDocumentCid[landCount] = _documentCid;
+        emit LandRegistered(landCount, _owner, _surveyNo, _area, msg.sender, _documentCid);
     }
 
     function verifyLand(uint256 _landId) public onlyRegistrar landExists(_landId) {
@@ -68,8 +76,14 @@ contract LandRegistry {
         emit LandVerified(_landId, msg.sender);
     }
 
-    // Callable by the current owner's wallet, or by a registrar (e.g. for an approved inheritance claim)
-    function transferOwnership(uint256 _landId, string memory _newOwner, address _newOwnerWallet)
+    // Callable by the current owner's wallet, or by a registrar (e.g. for an approved inheritance claim).
+    // _documentCid is the IPFS CID of the transfer deed and becomes the land's current document.
+    function transferOwnership(
+        uint256 _landId,
+        string memory _newOwner,
+        address _newOwnerWallet,
+        string memory _documentCid
+    )
         public
         landExists(_landId)
     {
@@ -80,9 +94,11 @@ contract LandRegistry {
         require(lands[_landId].isVerified, "Land is not verified");
         require(bytes(_newOwner).length > 0, "New owner required");
         require(_newOwnerWallet != address(0), "New owner wallet required");
+        require(bytes(_documentCid).length > 0, "Transfer document required");
 
         lands[_landId].owner = _newOwner;
         landOwnerWallet[_landId] = _newOwnerWallet;
-        emit OwnershipTransferred(_landId, _newOwner, _newOwnerWallet);
+        landDocumentCid[_landId] = _documentCid;
+        emit OwnershipTransferred(_landId, _newOwner, _newOwnerWallet, _documentCid);
     }
 }

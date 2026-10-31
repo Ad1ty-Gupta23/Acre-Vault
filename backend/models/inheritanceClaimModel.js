@@ -27,6 +27,12 @@ const InheritanceClaimSchema = new Schema(
       required: [true, 'Please provide the wallet that will own the land'],
       match: [/^0x[a-fA-F0-9]{40}$/, 'Please provide a valid wallet address']
     },
+    // IPFS CID of the supporting document (e.g. legal heir certificate);
+    // becomes the land's current document when the claim is approved
+    documentCid: {
+      type: String,
+      required: [true, 'Please upload a supporting document']
+    },
     claimant: {
       type: Schema.Types.ObjectId,
       ref: 'User',

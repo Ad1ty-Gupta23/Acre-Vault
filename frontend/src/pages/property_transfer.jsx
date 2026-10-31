@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { useBlockchain } from '../context/BlockchainContext';
 import { EXPLORER_URL } from '../config';
+import { uploadDocument } from '../utils/api';
 
 const PropertyTransfer = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const PropertyTransfer = () => {
   const [propertyId, setPropertyId] = useState(location.state?.selectedLandId ?? '');
   const [newOwner, setNewOwner] = useState('');
   const [newOwnerWallet, setNewOwnerWallet] = useState('');
+  const [deedFile, setDeedFile] = useState(null);
   const [message, setMessage] = useState('');
   const [txHash, setTxHash] = useState('');
   const [transferStatus, setTransferStatus] = useState('idle');
@@ -32,6 +34,9 @@ const PropertyTransfer = () => {
     if (!String(propertyId).trim() || !newOwner.trim() || !newOwnerWallet.trim()) {
       return fail("Please enter the Property ID, the new owner's name and their wallet address.");
     }
+    if (!deedFile) {
+      return fail('Please attach the signed transfer deed.');
+    }
     if (!ethers.isAddress(newOwnerWallet.trim())) {
       return fail('The new owner wallet address is not a valid Ethereum address.');
     }
@@ -50,10 +55,14 @@ const PropertyTransfer = () => {
     }
 
     setTransferStatus('processing');
-    setMessage('Waiting for the transaction to be confirmed...');
 
     try {
-      const receipt = await transferOwnership(property.id, newOwner.trim(), newOwnerWallet.trim());
+      // The transfer deed replaces the registration deed as the land's current document
+      setMessage('Storing the transfer deed on IPFS...');
+      const documentCid = await uploadDocument(deedFile, 'transfer-deed');
+
+      setMessage('Waiting for the transaction to be confirmed...');
+      const receipt = await transferOwnership(property.id, newOwner.trim(), newOwnerWallet.trim(), documentCid);
       setTxHash(receipt?.hash || '');
       setMessage(`Property ${property.id} successfully transferred to ${newOwner.trim()}.`);
       setTransferStatus('success');
@@ -138,6 +147,20 @@ const PropertyTransfer = () => {
             className="w-full p-2 border rounded mt-1 font-mono text-sm"
             disabled={inputsDisabled}
           />
+        </label>
+
+        <label className="block">
+          <span className="text-gray-700">Signed Transfer Deed</span>
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={(e) => setDeedFile(e.target.files[0] || null)}
+            className="w-full mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            disabled={inputsDisabled}
+          />
+          <span className="block mt-1 text-xs text-gray-500">
+            Stored on IPFS and becomes this land's current document. Earlier documents stay in its history.
+          </span>
         </label>
 
         <button
