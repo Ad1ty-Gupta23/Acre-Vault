@@ -1,0 +1,9 @@
+server:
+  port: ${PORT:5001}
+
+spring:
+  application:
+    name: acrevault-api
+  mongodb:
+    uri: ${MONGODB_URL:mongodb://localhost:27017}
+    database: ${MONGODB_DATABASE:landrecords}
