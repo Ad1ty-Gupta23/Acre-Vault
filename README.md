@@ -10,11 +10,37 @@ ownership history.
 | Part | Location | Port | Purpose |
 | --- | --- | --- | --- |
 | Frontend | `frontend/` (React + Vite + Tailwind) | 5173 | The website |
-| Auth & claims API | `app.js`, `backend/` (Express + MongoDB) | 5001 | Accounts, roles, inheritance claims |
-| Document checks | `fraud.py` (Flask + Tesseract) | 5000 | OCR and fraud checks on uploaded deeds |
-| Assistant | `chat.py` (FastAPI + Chroma) | 8000 | Q&A chatbot with voice input/output |
+| Auth & claims API | `backend/` (Spring Boot + MongoDB) | 5001 | Accounts, roles, inheritance claims, IPFS documents (being ported from Express) |
+| Document checks | `services/fraud-detection/` (Flask + Tesseract) | 5000 | OCR and fraud checks on uploaded deeds |
+| Assistant | `services/chatbot/` (FastAPI + Chroma) | 8000 | Q&A chatbot with voice input/output |
 | Smart contract | `blockchain/` (Hardhat, Solidity) | – | `LandRegistry` on Holesky or the PoA network |
 | PoA network | `blockchain/poa-network/` (Besu, QBFT) | 8545 | Private proof-of-authority chain run by government validators |
+
+```
+.
+├── frontend/              React app (own package.json, .env)
+├── backend/               Spring Boot API, Java 21 + Maven (own .env)
+├── services/
+│   ├── chatbot/           chat.py, landrecords.txt, requirements.txt
+│   └── fraud-detection/   fraud.py, centraldata.json, requirements.txt, .env
+└── blockchain/            Hardhat project and PoA network (own package.json, .env)
+```
+
+### Backend (Spring Boot)
+
+`backend/` is initialized with its dependencies (Web MVC, Validation, MongoDB,
+Security with JWT resource server, Actuator, springdoc OpenAPI, DevTools,
+Testcontainers) but has no endpoints yet. The Express API it replaces is
+documented, endpoint by endpoint, in
+[`backend/MIGRATION.md`](backend/MIGRATION.md), along with the plan for porting
+it.
+
+```bash
+cd backend
+./mvnw spring-boot:run        # needs MONGODB_URL
+./mvnw spring-boot:test-run   # or run against a throwaway MongoDB container (Docker)
+./mvnw verify                 # build and run tests (Docker)
+```
 
 ## Roles
 
@@ -29,7 +55,7 @@ On-chain, only **registrar** wallets can verify land, and only the owner's walle
 ## Documents on IPFS
 
 Every land carries an ownership document stored on IPFS (pinned through
-[Pinata](https://pinata.cloud) by the Express API, `POST /api/documents`):
+[Pinata](https://pinata.cloud) by the backend, `POST /api/documents`):
 
 - **Registration** pins the deed; its CID is stored on-chain with the land.
 - **Transfer** requires the signed transfer deed, which becomes the land's current
@@ -52,14 +78,16 @@ without the change showing on-chain.
 1. Install dependencies:
 
    ```bash
-   npm install
+   (cd frontend && npm install)
    (cd blockchain && npm install)
-   pip install -r requirements.txt   # also install the Tesseract OCR binary
+   pip install -r services/chatbot/requirements.txt
+   pip install -r services/fraud-detection/requirements.txt   # also install the Tesseract OCR binary
    ```
 
-2. Copy `.env.example` to `.env` and `blockchain/.env.example` to
-   `blockchain/.env`, then fill in the values (MongoDB URL, JWT secret, deployer
-   key, Pinata JWT, ...). Never commit `.env` files.
+2. Each part reads its own `.env`. Copy the `.env.example` next to it and fill in
+   the values (MongoDB URL, JWT secret, deployer key, Pinata JWT, ...):
+   `frontend/`, `backend/`, `services/fraud-detection/` and `blockchain/`.
+   Never commit `.env` files.
 
 3. Deploy the contract (or reuse an existing deployment):
 
@@ -70,7 +98,7 @@ without the change showing on-chain.
    ```
 
    Put the printed values in `VITE_CONTRACT_ADDRESS` and `VITE_DEPLOY_BLOCK` in
-   the root `.env`. The deploying wallet is the contract admin and a registrar;
+   `frontend/.env`. The deploying wallet is the contract admin and a registrar;
    grant other officials' wallets the registrar role with:
 
    ```bash
@@ -78,18 +106,19 @@ without the change showing on-chain.
    ```
 
 4. Approve the first government official (later officials can be approved from
-   the Verify page):
+   the Verify page). Until the backend has a command for this, use mongosh:
 
-   ```bash
-   npm run approve-official -- official@example.gov
+   ```js
+   db.users.updateOne({ email: "official@example.gov", role: "government" }, { $set: { isVerified: true } })
    ```
 
 5. Run everything:
 
    ```bash
-   npm start          # Express API + Vite dev server
-   python fraud.py    # document checks
-   python chat.py     # assistant
+   (cd frontend && npm run dev)             # website
+   (cd backend && ./mvnw spring-boot:run)   # API
+   python services/fraud-detection/fraud.py # document checks
+   python services/chatbot/chat.py          # assistant
    ```
 
 ### Proof-of-authority network
@@ -103,4 +132,4 @@ produce blocks (Hyperledger Besu, QBFT), see
 
 For development without Holesky, run `npx hardhat node` in `blockchain/`, deploy
 with `--network localhost`, and set `VITE_RPC_URL=http://127.0.0.1:8545` and
-`VITE_CHAIN_ID=31337`.
+`VITE_CHAIN_ID=31337` in `frontend/.env`.

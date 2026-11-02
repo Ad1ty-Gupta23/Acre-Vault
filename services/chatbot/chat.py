@@ -27,7 +27,8 @@ app.add_middleware(
 )
 
 # Create directories for storing audio files
-UPLOAD_DIR = Path("audio_files")
+BASE_DIR = Path(__file__).resolve().parent
+UPLOAD_DIR = BASE_DIR / "audio_files"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Define input schema
@@ -38,7 +39,8 @@ class QueryModel(BaseModel):
 translator = GoogleTranslator(source='auto', target='en')
 
 # Load dataset
-DATA_FILE = "landrecords.txt"
+DATA_FILE = BASE_DIR / "landrecords.txt"
+CHROMA_DIR = str(BASE_DIR / "chroma_db")
 
 def preprocess_dataset(file_path):
     """Preprocess the dataset to ensure each Q&A pair is treated as a separate document."""
@@ -61,15 +63,15 @@ def load_and_store_data():
     print(f"Split texts: {texts}")  # Check if the data is split correctly
 
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    db = Chroma.from_documents(texts, embeddings, persist_directory="./chroma_db")
+    db = Chroma.from_documents(texts, embeddings, persist_directory=CHROMA_DIR)
     return db
 
 # Load data into ChromaDB
-if not os.path.exists("./chroma_db"):
+if not os.path.exists(CHROMA_DIR):
     db = load_and_store_data()
 else:
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    db = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+    db = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
 
 retriever = db.as_retriever()
 

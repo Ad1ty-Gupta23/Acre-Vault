@@ -4,6 +4,13 @@ server:
 spring:
   application:
     name: acrevault-api
+  # Read backend/.env when present
+  config:
+    import: optional:file:.env[.properties]
   mongodb:
     uri: ${MONGODB_URL:mongodb://localhost:27017}
     database: ${MONGODB_DATABASE:landrecords}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB

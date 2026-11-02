@@ -18,6 +18,7 @@ CORS(app, resources={r"/*": {"origins": CLIENT_ORIGINS, "allow_headers": ["Conte
 # Ensure the uploads directory exists
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+CENTRAL_DATA_FILE = os.path.join(BASE_DIR, "centraldata.json")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Connect to MongoDB
@@ -35,12 +36,12 @@ except Exception as e:
     print(f"Error connecting to MongoDB: {str(e)}")
     # Fallback to JSON if MongoDB connection fails
     try:
-        with open("centraldata.json", "r") as file:
+        with open(CENTRAL_DATA_FILE, "r") as file:
             CENTRAL_DATA = json.load(file)
     except FileNotFoundError:
         print("Warning: centraldata.json not found. Creating empty database.")
         CENTRAL_DATA = []
-        with open("centraldata.json", "w") as file:
+        with open(CENTRAL_DATA_FILE, "w") as file:
             json.dump(CENTRAL_DATA, file)
 
 # Tesseract is found on PATH by default; set TESSERACT_CMD to override
@@ -433,7 +434,7 @@ def verify_and_save():
             CENTRAL_DATA.append(data)
             
             # Save updated database
-            with open("centraldata.json", "w") as file:
+            with open(CENTRAL_DATA_FILE, "w") as file:
                 json.dump(CENTRAL_DATA, file, indent=2)
             
             return jsonify({

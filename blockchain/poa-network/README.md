@@ -25,7 +25,7 @@ npm run poa:start     # start the 4 validators; JSON-RPC on http://localhost:854
 npm run deploy:poa    # deploy LandRegistry; note the address and block
 ```
 
-Point the website at it in the root `.env`:
+Point the website at it in `frontend/.env`:
 
 ```bash
 VITE_RPC_URL=http://localhost:8545
